@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forms Database App</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f9f9f9;
+    }
+    h1 {
+        text-align: center;
+    }
+    form {
+        margin-bottom: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+    form input, form button {
+        padding: 10px;
+        font-size: 16px;
+    }
+    #search {
+        display: block;
+        margin: 10px auto;
+        padding: 10px;
+        width: 80%;
+        font-size: 16px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+    }
+    th {
+        background-color: #e9e9e9;
+    }
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+    .delete-btn {
+        color: #fff;
+        background-color: #d9534f;
+        border: none;
+        padding: 5px 8px;
+        cursor: pointer;
+        border-radius: 3px;
+    }
+    .delete-btn:hover {
+        background-color: #c9302c;
+    }
+    #clearBtn {
+        display: block;
+        margin: 10px auto;
+        padding: 10px 20px;
+        background-color: #f0ad4e;
+        color: #fff;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+    #clearBtn:hover {
+        background-color: #ec971f;
+    }
+</style>
+</head>
+<body>
+<h1>Forms Database</h1>
+
+<form id="addForm">
+    <input type="text" id="formNum" placeholder="Form #" required>
+    <input type="text" id="formName" placeholder="Name of the form" required>
+    <input type="text" id="unit" placeholder="Unit">
+    <input type="text" id="msCode" placeholder="MS Code">
+    <button type="submit">Add Form</button>
+</form>
+
+<input type="text" id="search" placeholder="Search forms...">
+
+<table id="formsTable">
+    <thead>
+        <tr>
+            <th>Form #</th>
+            <th>Name of the form</th>
+            <th>Unit</th>
+            <th>MS Code</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Data will be injected here -->
+    </tbody>
+</table>
+
+<button id="clearBtn">Clear All Data</button>
+
+<script>
+    // Initialize data from localStorage or empty array
+    let forms = JSON.parse(localStorage.getItem('formsDatabase') || '[]');
+
+    const addForm = document.getElementById('addForm');
+    const searchInput = document.getElementById('search');
+    const formsTableBody = document.querySelector('#formsTable tbody');
+    const clearBtn = document.getElementById('clearBtn');
+
+    // Render table based on forms array
+    function renderTable(data) {
+        formsTableBody.innerHTML = '';
+        data.forEach((entry, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${entry.formNum}</td>
+                <td>${entry.formName}</td>
+                <td>${entry.unit}</td>
+                <td>${entry.msCode}</td>
+                <td><button class="delete-btn" data-index="${index}">Delete</button></td>
+            `;
+            formsTableBody.appendChild(row);
+        });
+    }
+
+    // Save forms array to localStorage and render
+    function saveAndRender() {
+        localStorage.setItem('formsDatabase', JSON.stringify(forms));
+        renderTable(forms);
+    }
+
+    // Add new form entry
+    addForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formNum = document.getElementById('formNum').value.trim();
+        const formName = document.getElementById('formName').value.trim();
+        const unit = document.getElementById('unit').value.trim();
+        const msCode = document.getElementById('msCode').value.trim();
+
+        if (!formNum || !formName) {
+            alert('Form # and Name are required');
+            return;
+        }
+
+        forms.push({ formNum, formName, unit, msCode });
+        addForm.reset();
+        saveAndRender();
+    });
+
+    // Delete form entry
+    formsTableBody.addEventListener('click', function(e) {
+        if (e.target.classList.contains('delete-btn')) {
+            const index = parseInt(e.target.getAttribute('data-index'), 10);
+            forms.splice(index, 1);
+            saveAndRender();
+        }
+    });
+
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        const filtered = forms.filter(entry => {
+            return (
+                entry.formNum.toLowerCase().includes(query) ||
+                entry.formName.toLowerCase().includes(query) ||
+                entry.unit.toLowerCase().includes(query) ||
+                entry.msCode.toLowerCase().includes(query)
+            );
+        });
+        renderTable(filtered);
+    });
+
+    // Clear all data
+    clearBtn.addEventListener('click', function() {
+        if (confirm('Are you sure you want to clear all data?')) {
+            forms = [];
+            saveAndRender();
+        }
+    });
+
+    // Initial render
+    saveAndRender();
+</script>
+</body>
+</html>
