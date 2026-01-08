@@ -67,6 +67,19 @@
     .delete-btn:hover {
         background-color: #c9302c;
     }
+    /* Edit button styling: differentiate from delete button */
+    .edit-btn {
+        color: #fff;
+        background-color: #5cb85c;
+        border: none;
+        padding: 5px 8px;
+        cursor: pointer;
+        border-radius: 3px;
+        margin-right: 5px;
+    }
+    .edit-btn:hover {
+        background-color: #4cae4c;
+    }
     /* The Clear All button has been removed.  Previously defined #clearBtn styles have been
        deleted to prevent unused CSS rules. */
 </style>
@@ -118,6 +131,12 @@
     const formsTableBody = document.querySelector('#formsTable tbody');
     // The Clear All button has been removed, so we no longer query it from the DOM.
 
+    // Grab reference to the submit button so we can change its label when editing
+    const addBtn = addForm.querySelector('button[type="submit"]');
+
+    // Track which row is being edited; null when adding a new entry
+    let editIndex = null;
+
     // Render table based on forms array
     function renderTable(data) {
         formsTableBody.innerHTML = '';
@@ -128,7 +147,10 @@
                 <td>${entry.formName}</td>
                 <td>${entry.unit}</td>
                 <td>${entry.msCode}</td>
-                <td><button class="delete-btn" data-index="${index}">Delete</button></td>
+                <td>
+                    <button class="edit-btn" data-index="${index}">Edit</button>
+                    <button class="delete-btn" data-index="${index}">Delete</button>
+                </td>
             `;
             formsTableBody.appendChild(row);
         });
@@ -140,7 +162,7 @@
         renderTable(forms);
     }
 
-    // Add new form entry
+    // Handle form submission: add a new entry or update an existing one
     addForm.addEventListener('submit', function(e) {
         e.preventDefault();
         const formNum = document.getElementById('formNum').value.trim();
@@ -153,17 +175,46 @@
             return;
         }
 
-        forms.push({ formNum, formName, unit, msCode });
+        if (editIndex !== null) {
+            // Update existing entry
+            forms[editIndex] = { formNum, formName, unit, msCode };
+            editIndex = null;
+            // Restore button label
+            addBtn.textContent = 'Add Form';
+        } else {
+            // Add new entry
+            forms.push({ formNum, formName, unit, msCode });
+        }
         addForm.reset();
         saveAndRender();
     });
 
-    // Delete form entry
+    // Delete or edit form entry
     formsTableBody.addEventListener('click', function(e) {
-        if (e.target.classList.contains('delete-btn')) {
-            const index = parseInt(e.target.getAttribute('data-index'), 10);
+        const target = e.target;
+        if (target.classList.contains('delete-btn')) {
+            const index = parseInt(target.getAttribute('data-index'), 10);
             forms.splice(index, 1);
+            // If deleting an entry that is currently being edited, reset edit state
+            if (editIndex !== null && editIndex === index) {
+                editIndex = null;
+                addBtn.textContent = 'Add Form';
+                addForm.reset();
+            }
             saveAndRender();
+        } else if (target.classList.contains('edit-btn')) {
+            const index = parseInt(target.getAttribute('data-index'), 10);
+            const entry = forms[index];
+            // Populate form fields with the selected entry
+            document.getElementById('formNum').value = entry.formNum;
+            document.getElementById('formName').value = entry.formName;
+            document.getElementById('unit').value = entry.unit;
+            document.getElementById('msCode').value = entry.msCode;
+            // Set edit index and update button label
+            editIndex = index;
+            addBtn.textContent = 'Update Form';
+            // Focus the first input for user convenience
+            document.getElementById('formNum').focus();
         }
     });
 
