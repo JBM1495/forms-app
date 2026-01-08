@@ -13,8 +13,17 @@
     h1 {
         text-align: center;
     }
+    /* Layout tweaks: the add form button should appear below the MS Code field. To
+       achieve this, the form is structured as a column with a separate wrapper
+       for the inputs. */
     form {
         margin-bottom: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    .form-fields {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
@@ -58,30 +67,22 @@
     .delete-btn:hover {
         background-color: #c9302c;
     }
-    #clearBtn {
-        display: block;
-        margin: 10px auto;
-        padding: 10px 20px;
-        background-color: #f0ad4e;
-        color: #fff;
-        border: none;
-        border-radius: 3px;
-        cursor: pointer;
-        font-size: 16px;
-    }
-    #clearBtn:hover {
-        background-color: #ec971f;
-    }
+    /* The Clear All button has been removed.  Previously defined #clearBtn styles have been
+       deleted to prevent unused CSS rules. */
 </style>
 </head>
 <body>
 <h1>Forms Database</h1>
 
 <form id="addForm">
-    <input type="text" id="formNum" placeholder="Form #" required>
-    <input type="text" id="formName" placeholder="Name of the form" required>
-    <input type="text" id="unit" placeholder="Unit">
-    <input type="text" id="msCode" placeholder="MS Code">
+    <!-- Wrap inputs in a separate container so they sit on the same row(s) while
+         the Add Form button sits on its own below -->
+    <div class="form-fields">
+        <input type="text" id="formNum" placeholder="Form #" required>
+        <input type="text" id="formName" placeholder="Name of the form" required>
+        <input type="text" id="unit" placeholder="Unit">
+        <input type="text" id="msCode" placeholder="MS Code">
+    </div>
     <button type="submit">Add Form</button>
 </form>
 
@@ -102,62 +103,20 @@
     </tbody>
 </table>
 
-<button id="clearBtn">Clear All Data</button>
+<!-- Clear All button removed: Users can no longer reset data to defaults. -->
 
 <script>
     // Initialize data from localStorage or empty array
     let forms = JSON.parse(localStorage.getItem('formsDatabase') || '[]');
 
-    // Default DMV Mailroom PO Routing reference data. Each record maps the P.O. Box
-    // number to its routing destination and description. These will be loaded
-    // automatically if the database is empty on first launch, and used by the
-    // Clear All button to reset the table back to these defaults.
-    const defaultRecords = [
-        {formNum: '231', formName: "Open – H221, H264, H265, G201", unit: '', msCode: "Open & sort mail to appropriate units (e.g. H221 Account Processing Unit for driver notice letters; plus other processing units H264, H265, G201). Manual determination required."},
-        {formNum: '278', formName: "G204 – Record Security & Issuance Unit", unit: '', msCode: "Renewal-by-mail and driver medical evaluation documents (handled by Record Security/Issuance)."},
-        {formNum: '292', formName: "Open – internal sorting required", unit: '', msCode: "Open & sort incoming renewals: “Ones, Fives, Presorts or Tick” (one-year renewals, five-year renewals, presorted mail, tickler items). Manual determination required."},
-        {formNum: '382', formName: "E109", unit: '', msCode: "Driver license special processing (mail routes to E109 for handling)."},
-        {formNum: '890', formName: "Open – Distribute to G204, G210, J232, J233, J234, J237, Salvage", unit: '', msCode: "Open & sort to multiple driver license units: G204 (record security/issuance), G210 (RSIU – record security investigations), J232 (Abstract Processing Unit), J233 (Mandatory Actions Unit), J234 (Driver Safety Unit), J237 (Insurance Unit), and Salvage (title salvage cases to Data Entry). Handles a variety of DL extension notices, legal presence letters, conviction abstracts, suspension/restriction orders, insurance proof notices, etc."},
-        {formNum: '317', formName: "H143 – Lien Sales Unit", unit: '', msCode: "Lien sale documents for vehicles (processed by Lien Sales unit)."},
-        {formNum: '320', formName: "H160 – IRP Unit (International Registration Plan)", unit: '', msCode: "IRP program documents for commercial vehicle registration."},
-        {formNum: '342', formName: "L224 – Occupational Licensing", unit: '', msCode: "Occupational Licensing correspondence (business licensing for dealers, schools)."},
-        {formNum: '370', formName: "H875 – Motor Carrier Permit Unit", unit: '', msCode: "Motor Carrier Permit program mail (commercial carrier permits and related docs)."},
-        {formNum: '601', formName: "D238 – Specialized Plates Unit", unit: '', msCode: "Specialized license plates program applications and documents."},
-        {formNum: '602', formName: "Open – DPP Unit (Disabled Persons Placard)", unit: '', msCode: "Disabled person placard applications (open and verify contents, then route to DPP unit). Manual review required."},
-        {formNum: '603', formName: "C271 – Registration Processing Unit 1 (Technical Compliance)", unit: '', msCode: "Registration processing (Technical Compliance Section, including vessel registration documents)."},
-        {formNum: '614', formName: "C254 – VFO (Virtual Field Office)", unit: '', msCode: "Virtual Field Office mail (online/remote transaction processing)."},
-        {formNum: '869', formName: "Open & Determine → C271 – Registration Processing Unit", unit: '', msCode: "Open & determine registration-related mail; route to Registration Processing Unit after review. Manual determination required."},
-        {formNum: '338', formName: "J237 – Insurance Unit", unit: '', msCode: "Financial Responsibility insurance documents (proof of insurance filings, SR-1 accident reports, courtesy insurance notices)."},
-        {formNum: '339', formName: "H186 – Automated Billing Info Services", unit: '', msCode: "Automated billing information services (system-generated billing notices and statements)."},
-        {formNum: '405', formName: "N305 – Vehicle Insurance Program", unit: '', msCode: "Vehicle Insurance Program correspondence (vehicle insurance compliance notices and documents)."},
-        {formNum: '408', formName: "N305 – Vehicle Insurance Program", unit: '', msCode: "Same as 405: Vehicle Insurance Program (insurance compliance) mail."},
-        {formNum: '600', formName: "N305 – Vehicle Insurance Program", unit: '', msCode: "Same as 405: Vehicle Insurance Program mail (insurance compliance)."},
-        {formNum: '884', formName: "J237 – Insurance Unit", unit: '', msCode: "Financial Responsibility/insurance mail (handled by Insurance Unit – same as PO 338 above)."},
-        {formNum: '247', formName: "G199 – Information Services Branch", unit: '', msCode: "Information Services Branch (internal DMV information systems/support correspondence)."},
-        {formNum: '315', formName: "A208 – HRB (Human Resources Branch)", unit: '', msCode: "Human Resources Branch mail (HR-related documents and correspondence)."},
-        {formNum: '341', formName: "C140 – Revenue Services Support Unit (RSSU)", unit: '', msCode: "Revenue accounting support (payment collection, bankruptcy and court order correspondence for DMV fees)."},
-        {formNum: '345', formName: "Open & Determine (no preset code)", unit: '', msCode: "Open & determine miscellaneous mail; manual review required to route to the proper unit."},
-        {formNum: '366', formName: "L212 – ASF/ISF Program", unit: '', msCode: "ASF/ISF special program mail (route to L212; handles specific funds/program documents)."},
-        {formNum: '391', formName: "N227 – Confidential Records Unit", unit: '', msCode: "Confidential Records Unit (restricted/secure records and confidential correspondence)."},
-        {formNum: '859', formName: "Open – special sorting required", unit: '', msCode: "Open & sort change-of-address and returned mail: NRLs (notification letters – small, medium, large sizes) and COAs (Change of Address forms). Any enclosed payments, pink slips, or out-of-state title transfers must be forwarded to C271 (Registration Unit)."},
-        {formNum: '885', formName: "Open & Determine – special sorting required", unit: '', msCode: "Open & determine mail with multiple slip types: separate white slips from pink slips, forwarded mail from return-to-sender, and identify large-font notices (route those to H186 unit). Route any other “live” mail to the appropriate unit for handling."},
-        {formNum: '325', formName: "D190 – Data Entry Unit", unit: '', msCode: "Data Entry (manual keying of application data; includes salvage title processing)."},
-        {formNum: '839', formName: "(RP) D190 – Data Entry Unit", unit: '', msCode: "RP (Remittance/Return Processing) to Data Entry – mail requiring data entry processing (often payments or returned documents)."},
-        {formNum: '891', formName: "(RP) D190 – Data Entry Unit", unit: '', msCode: "RP to Data Entry – Supervisor review required. This mail must be given to a supervisor for appropriate handling before data entry."},
-        {formNum: '893', formName: "(RP) D190 – Data Entry Unit", unit: '', msCode: "RP to Data Entry – Supervisor review required (same instructions as PO 891 above)."},
-        {formNum: '894', formName: "(RP) D190 – Data Entry Unit", unit: '', msCode: "RP to Data Entry (returned or exception mail to be processed by Data Entry staff)."},
-        {formNum: '897', formName: "(RP) D190 – Data Entry Unit", unit: '', msCode: "RP to Data Entry (returned/exception mail for data entry processing)."}
-    ];
-
-    // Automatically seed default records when no data exists.
-    if (!forms || forms.length === 0) {
-        forms = [...defaultRecords];
-    }
+    // The default DMV routing records and auto-seeding have been removed. The repository now
+    // initializes with no entries. All forms added via the UI will remain on the user's
+    // device only (localStorage) and will not pre-populate from any default data.
 
     const addForm = document.getElementById('addForm');
     const searchInput = document.getElementById('search');
     const formsTableBody = document.querySelector('#formsTable tbody');
-    const clearBtn = document.getElementById('clearBtn');
+    // The Clear All button has been removed, so we no longer query it from the DOM.
 
     // Render table based on forms array
     function renderTable(data) {
@@ -222,14 +181,7 @@
         renderTable(filtered);
     });
 
-    // Clear all data
-    clearBtn.addEventListener('click', function() {
-        if (confirm('Are you sure you want to reset to the DMV Mailroom defaults?')) {
-            // Reset the database to the default DMV entries instead of leaving it empty.
-            forms = [...defaultRecords];
-            saveAndRender();
-        }
-    });
+    // Clear functionality removed: no default data reset behaviour is provided.
 
     // Initial render
     saveAndRender();
