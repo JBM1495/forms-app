@@ -170,20 +170,24 @@
         const unit = document.getElementById('unit').value.trim();
         const msCode = document.getElementById('msCode').value.trim();
 
+        // If optional fields are left blank, substitute "n/a" for missing values
+        const unitVal = unit === '' ? 'n/a' : unit;
+        const msCodeVal = msCode === '' ? 'n/a' : msCode;
+
         if (!formNum || !formName) {
             alert('Form # and Name are required');
             return;
         }
 
         if (editIndex !== null) {
-            // Update existing entry
-            forms[editIndex] = { formNum, formName, unit, msCode };
+            // Update existing entry with blank fields replaced by 'n/a'
+            forms[editIndex] = { formNum, formName, unit: unitVal, msCode: msCodeVal };
             editIndex = null;
             // Restore button label
             addBtn.textContent = 'Add Form';
         } else {
-            // Add new entry
-            forms.push({ formNum, formName, unit, msCode });
+            // Add new entry with blank fields replaced by 'n/a'
+            forms.push({ formNum, formName, unit: unitVal, msCode: msCodeVal });
         }
         addForm.reset();
         saveAndRender();
